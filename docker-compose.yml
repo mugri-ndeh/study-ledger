@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ledger
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Only reachable from this machine (port 5433, so it does not clash with a local Postgres on 5432).
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledger -d ledger"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://ledger:${POSTGRES_PASSWORD}@db:5432/ledger
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-true}
+      MARKET_MAX_AGE_DAYS: ${MARKET_MAX_AGE_DAYS:-7}
+    ports:
+      - "8000:8000"
+    volumes:
+      # The old single-user SQLite database, read-only, for the one-time `make import-sqlite`.
+      - ./backend/data:/import:ro
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,38 @@
+# Production stack. Portainer deploys this file straight from the Git repository.
+# Unlike the docker-compose.yml in the project root, it doesn't build anything: it runs the image
+# GitHub Actions pushed to Docker Hub. Set the variables below in Portainer's stack
+# "Environment variables" section (see deploy/stack.env.example).
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ledger
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No ports: only the app can reach the database.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledger -d ledger"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    image: ${APP_IMAGE:?Set APP_IMAGE, e.g. yourname/study-ledger:latest}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://ledger:${POSTGRES_PASSWORD}@db:5432/ledger
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-true}
+      MARKET_MAX_AGE_DAYS: ${MARKET_MAX_AGE_DAYS:-7}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+
+volumes:
+  # The database lives here. Redeploys and new images don't touch it.
+  pgdata:

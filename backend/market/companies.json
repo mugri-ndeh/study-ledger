@@ -1,0 +1,182 @@
+[
+ {
+  "name": "Anthropic",
+  "provider": "greenhouse",
+  "board": "anthropic"
+ },
+ {
+  "name": "Stripe",
+  "provider": "greenhouse",
+  "board": "stripe"
+ },
+ {
+  "name": "Databricks",
+  "provider": "greenhouse",
+  "board": "databricks"
+ },
+ {
+  "name": "Cloudflare",
+  "provider": "greenhouse",
+  "board": "cloudflare"
+ },
+ {
+  "name": "Datadog",
+  "provider": "greenhouse",
+  "board": "datadog"
+ },
+ {
+  "name": "GitLab",
+  "provider": "greenhouse",
+  "board": "gitlab"
+ },
+ {
+  "name": "Airbnb",
+  "provider": "greenhouse",
+  "board": "airbnb"
+ },
+ {
+  "name": "Figma",
+  "provider": "greenhouse",
+  "board": "figma"
+ },
+ {
+  "name": "Discord",
+  "provider": "greenhouse",
+  "board": "discord"
+ },
+ {
+  "name": "Robinhood",
+  "provider": "greenhouse",
+  "board": "robinhood"
+ },
+ {
+  "name": "Scale AI",
+  "provider": "greenhouse",
+  "board": "scaleai"
+ },
+ {
+  "name": "Vercel",
+  "provider": "greenhouse",
+  "board": "vercel"
+ },
+ {
+  "name": "MongoDB",
+  "provider": "greenhouse",
+  "board": "mongodb"
+ },
+ {
+  "name": "Elastic",
+  "provider": "greenhouse",
+  "board": "elastic"
+ },
+ {
+  "name": "Twilio",
+  "provider": "greenhouse",
+  "board": "twilio"
+ },
+ {
+  "name": "Dropbox",
+  "provider": "greenhouse",
+  "board": "dropbox"
+ },
+ {
+  "name": "Reddit",
+  "provider": "greenhouse",
+  "board": "reddit"
+ },
+ {
+  "name": "Instacart",
+  "provider": "greenhouse",
+  "board": "instacart"
+ },
+ {
+  "name": "Brex",
+  "provider": "greenhouse",
+  "board": "brex"
+ },
+ {
+  "name": "Samsara",
+  "provider": "greenhouse",
+  "board": "samsara"
+ },
+ {
+  "name": "Grafana Labs",
+  "provider": "greenhouse",
+  "board": "grafanalabs"
+ },
+ {
+  "name": "Together AI",
+  "provider": "greenhouse",
+  "board": "togetherai"
+ },
+ {
+  "name": "Palantir",
+  "provider": "lever",
+  "board": "palantir"
+ },
+ {
+  "name": "Spotify",
+  "provider": "lever",
+  "board": "spotify"
+ },
+ {
+  "name": "OpenAI",
+  "provider": "ashby",
+  "board": "openai"
+ },
+ {
+  "name": "Notion",
+  "provider": "ashby",
+  "board": "notion"
+ },
+ {
+  "name": "Linear",
+  "provider": "ashby",
+  "board": "linear"
+ },
+ {
+  "name": "Ramp",
+  "provider": "ashby",
+  "board": "ramp"
+ },
+ {
+  "name": "Cohere",
+  "provider": "ashby",
+  "board": "cohere"
+ },
+ {
+  "name": "Perplexity",
+  "provider": "ashby",
+  "board": "perplexity"
+ },
+ {
+  "name": "Replit",
+  "provider": "ashby",
+  "board": "replit"
+ },
+ {
+  "name": "Supabase",
+  "provider": "ashby",
+  "board": "supabase"
+ },
+ {
+  "name": "PostHog",
+  "provider": "ashby",
+  "board": "posthog"
+ },
+ {
+  "name": "LangChain",
+  "provider": "ashby",
+  "board": "langchain"
+ },
+ {
+  "name": "Modal",
+  "provider": "ashby",
+  "board": "modal"
+ },
+ {
+  "name": "ElevenLabs",
+  "provider": "ashby",
+  "board": "elevenlabs"
+ }
+]

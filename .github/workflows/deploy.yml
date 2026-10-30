@@ -1,0 +1,113 @@
+# Test → build → push to Docker Hub → tell Portainer to redeploy.
+#
+# Runs on every push to main (merging a pull request is a push to main).
+# On pull requests it only runs the tests, so broken code can't be merged unnoticed.
+#
+# Needs these settings in GitHub → Settings → Secrets and variables → Actions:
+#   Variables: DOCKERHUB_USERNAME     your Docker Hub username (not secret, so it shows in logs)
+#   Secrets:   DOCKERHUB_TOKEN        a Docker Hub access token with Read & Write
+#              PORTAINER_WEBHOOK_URL  the stack's GitOps webhook URL from Portainer
+name: Test, build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # a "Run workflow" button in the Actions tab
+
+# If you push twice quickly, cancel the older run instead of deploying it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/study-ledger
+
+jobs:
+  # 1. Backend tests against a real Postgres, started by GitHub next to the job.
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ledger
+          POSTGRES_PASSWORD: ledger
+          POSTGRES_DB: ledger_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ledger -d ledger_test" --health-interval
+          5s --health-timeout 3s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://ledger:ledger@localhost:5432/ledger_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+
+  # 2. The frontend must type-check and build.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  # 3. Build the Docker image and push it to Docker Hub. Only on main, only if 1 and 2 passed.
+  build-and-push:
+    needs: [test, frontend]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64 # add ,linux/arm64 for ARM servers (Raspberry Pi, Oracle Ampere)
+          push: true
+          # :latest is what the server runs; :sha-xxxxxxx lets you roll back to any commit.
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          # Layer cache makes later builds faster. ignore-error: a cache hiccup must never fail the deploy.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max,ignore-error=true
+
+  # 4. Ask Portainer to pull the new image and restart the stack.
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the Portainer webhook
+        env:
+          WEBHOOK: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "::notice::PORTAINER_WEBHOOK_URL isn't set yet, so nothing was deployed. The image is on Docker Hub."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 60 -X POST "$WEBHOOK"
+          echo "Portainer is redeploying ${IMAGE}:latest"
